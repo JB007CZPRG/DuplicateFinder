@@ -1,0 +1,361 @@
+<Window x:Class="DuplicateFinder.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DuplicateFinder.Helpers"
+        xmlns:vm="clr-namespace:DuplicateFinder.ViewModels"
+        Title="DuplicateFinder" Height="750" Width="1100"
+        MinHeight="550" MinWidth="800"
+        Background="#F3F3F3"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Window.Resources>
+        <local:StatusToBrushConverter x:Key="StatusToBrushConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Inverse BooleanToVisibility -->
+        <local:InverseBoolConverter x:Key="InverseBool"/>
+
+        <!-- Button Style -->
+        <Style x:Key="AccentButton" TargetType="Button">
+            <Setter Property="Background" Value="#0078D4"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#106EBE"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#CCCCCC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#E1E1E1"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#D1D1D1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DangerButton" TargetType="Button">
+            <Setter Property="Background" Value="#c42b1c"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#A12215"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding BrowseFolderACommand}"/>
+        <KeyBinding Key="F5" Command="{Binding ScanCommand}"/>
+        <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}"/>
+        <KeyBinding Key="E" Modifiers="Ctrl" Command="{Binding ExportHtmlCommand}"/>
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- === ROW 0: Výběr složek === -->
+        <Border Grid.Row="0" Background="White" Padding="15,12" Margin="0,0,0,1">
+            <StackPanel>
+                <TextBlock Text="📁 Výběr složek" FontSize="14" FontWeight="SemiBold" Foreground="#333" Margin="0,0,0,8"/>
+                <DockPanel Margin="0,3">
+                    <TextBlock Text="Složka A:" Width="65" VerticalAlignment="Center" FontWeight="Medium"/>
+                    <Button Content="Vybrat" DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}" 
+                            Command="{Binding BrowseFolderACommand}" Margin="5,0,0,0"/>
+                    <TextBox Text="{Binding FolderA, UpdateSourceTrigger=PropertyChanged}" 
+                             Padding="6,4" VerticalContentAlignment="Center"/>
+                </DockPanel>
+                <DockPanel Margin="0,3">
+                    <TextBlock Text="Složka B:" Width="65" VerticalAlignment="Center" FontWeight="Medium"/>
+                    <Button Content="Vybrat" DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding BrowseFolderBCommand}" Margin="5,0,0,0"/>
+                    <TextBox Text="{Binding FolderB, UpdateSourceTrigger=PropertyChanged}" 
+                             Padding="6,4" VerticalContentAlignment="Center"/>
+                </DockPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- === ROW 1: Nastavení === -->
+        <Border Grid.Row="1" Background="White" Padding="15,10" Margin="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBlock Text="Metoda:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="Medium"/>
+                    <ComboBox ItemsSource="{Binding ComparisonMethods}" 
+                              SelectedItem="{Binding SelectedComparisonMethod}" 
+                              Width="150" VerticalContentAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBlock Text="Filtry:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="Medium"/>
+                    <TextBox Text="{Binding Settings.FileTypeFilter, UpdateSourceTrigger=PropertyChanged}" 
+                             Width="120" Padding="4" VerticalContentAlignment="Center"
+                             ToolTip="Typy souborů oddělené středníkem (např. *.jpg;*.png)"/>
+                </StackPanel>
+
+                <CheckBox Grid.Column="2" Content="Podsložky" 
+                          IsChecked="{Binding Settings.IncludeSubfolders}" 
+                          VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="0,0,10,0">
+                    <TextBlock Text="Výjimky:" VerticalAlignment="Center" Margin="0,0,5,0" FontWeight="Medium"/>
+                    <TextBox Text="{Binding Settings.ExcludePatterns, UpdateSourceTrigger=PropertyChanged}" 
+                             Width="150" Padding="4" VerticalContentAlignment="Center"
+                             ToolTip="Vzory pro vyloučení (např. .git;node_modules;bin)"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="5" Orientation="Horizontal">
+                    <Button Content="▶ POROVNAT" Style="{StaticResource AccentButton}"
+                            Command="{Binding ScanCommand}" 
+                            IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBool}}"
+                            Width="120" Height="36"/>
+                    <Button Content="✕ Zrušit" Style="{StaticResource DangerButton}"
+                            Command="{Binding CancelCommand}" 
+                            IsEnabled="{Binding IsScanning}"
+                            Margin="8,0,0,0" Height="36"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- === ROW 2: Progress === -->
+        <Border Grid.Row="2" Background="White" Padding="15,8" Margin="0,0,0,1"
+                Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <TextBlock Text="{Binding ProgressValue, StringFormat={}{0}%}" 
+                           DockPanel.Dock="Right" VerticalAlignment="Center" 
+                           Margin="10,0,0,0" FontWeight="SemiBold" Foreground="#0078D4"/>
+                <ProgressBar Value="{Binding ProgressValue}" Height="18" 
+                             Foreground="#0078D4" Background="#E8E8E8"/>
+            </DockPanel>
+        </Border>
+
+        <!-- === ROW 3: Výsledky === -->
+        <Border Grid.Row="3" Background="White" Padding="10" Margin="0,0,0,1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header výsledků -->
+                <DockPanel Grid.Row="0" Margin="5,0,5,8">
+                    <TextBlock Text="📋 VÝSLEDKY" FontSize="14" FontWeight="SemiBold" 
+                               VerticalAlignment="Center" Foreground="#333"/>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <TextBlock Text="Filtr:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <ComboBox ItemsSource="{Binding StatusFilterOptions}"
+                                  SelectedItem="{Binding SelectedStatusFilter}"
+                                  Width="150" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- DataGrid výsledků -->
+                <DataGrid Grid.Row="1" ItemsSource="{Binding FilteredResults}" 
+                          AutoGenerateColumns="False" IsReadOnly="False" 
+                          GridLinesVisibility="None" 
+                          RowHeaderWidth="0"
+                          AlternatingRowBackground="#FAFAFA"
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          SelectionMode="Extended" SelectionUnit="FullRow"
+                          BorderThickness="1" BorderBrush="#E0E0E0">
+                    <DataGrid.Columns>
+                        <!-- Checkbox -->
+                        <DataGridCheckBoxColumn Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                                Width="35" Header=""/>
+                        <!-- Název -->
+                        <DataGridTextColumn Header="Název" Binding="{Binding FileName}" Width="2*" IsReadOnly="True"/>
+                        <!-- Velikost -->
+                        <DataGridTextColumn Header="Velikost" Binding="{Binding SizeBytes}" Width="Auto" IsReadOnly="True"/>
+                        <!-- Datum -->
+                        <DataGridTextColumn Header="Datum" Binding="{Binding LastModified, StringFormat=yyyy-MM-dd}" Width="Auto" IsReadOnly="True"/>
+                        <!-- Hash -->
+                        <DataGridTextColumn Header="Hash" Binding="{Binding Hash}" Width="Auto" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                    <Setter Property="FontSize" Value="11"/>
+                                    <Setter Property="MaxWidth" Value="120"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <!-- Stav -->
+                        <DataGridTemplateColumn Header="Stav" Width="140" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Status, Converter={StaticResource StatusToBrushConverter}}" 
+                                            CornerRadius="4" Padding="6,3" HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Status}" FontSize="12"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!-- Složka -->
+                        <DataGridTextColumn Header="Složka" Binding="{Binding FolderSource}" Width="60" IsReadOnly="True"/>
+                        <!-- Cesta -->
+                        <DataGridTextColumn Header="Cesta" Binding="{Binding FullPath}" Width="2*" IsReadOnly="True"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Rescue Center Panel (překryvný) -->
+                <Border Grid.Row="1" Background="White" Padding="15"
+                        Visibility="{Binding IsRescueCenterOpen, Converter={StaticResource BoolToVis}}"
+                        BorderBrush="#0078D4" BorderThickness="2" CornerRadius="6">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock Text="📦 Rescue Center" FontSize="16" FontWeight="SemiBold" 
+                                       Foreground="#0078D4" VerticalAlignment="Center"/>
+                            <Button Content="✕ Zavřít" DockPanel.Dock="Right" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding ToggleRescueCenterCommand}"/>
+                        </DockPanel>
+
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding RescueEntries}"
+                                  AutoGenerateColumns="False" IsReadOnly="True"
+                                  GridLinesVisibility="None" RowHeaderWidth="0"
+                                  CanUserAddRows="False" BorderThickness="1" BorderBrush="#E0E0E0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Název" Binding="{Binding FileName}" Width="2*"/>
+                                <DataGridTextColumn Header="Původní cesta" Binding="{Binding OriginalPath}" Width="3*"/>
+                                <DataGridTextColumn Header="Přesunuto" Binding="{Binding MovedDate, StringFormat=yyyy-MM-dd HH:mm}" Width="Auto"/>
+                                <DataGridTextColumn Header="Vyprší" Binding="{Binding ExpiresDate, StringFormat=yyyy-MM-dd}" Width="Auto"/>
+                                <DataGridTemplateColumn Header="Akce" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="↩ Obnovit" Margin="0,0,5,0" Padding="6,2"
+                                                        Command="{Binding DataContext.RestoreFromRescueCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="🗑 Smazat" Padding="6,2" Foreground="#c42b1c"
+                                                        Command="{Binding DataContext.DeleteFromRescueCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- === ROW 4: Akční panel === -->
+        <Border Grid.Row="4" Background="White" Padding="12,8" Margin="0,0,0,1">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="☑ Vybrat duplikáty" Style="{StaticResource SecondaryButton}" 
+                            Command="{Binding SelectAllCommand}" Margin="0,0,5,0"/>
+                    <Button Content="☐ Zrušit výběr" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding DeselectAllCommand}" Margin="0,0,15,0"/>
+
+                    <Button Content="🗑 Smazat" Style="{StaticResource DangerButton}"
+                            Command="{Binding DeleteSelectedCommand}" Margin="0,0,5,0"/>
+                    <Button Content="📦 Rescue" Style="{StaticResource AccentButton}"
+                            Command="{Binding RescueSelectedCommand}" Margin="0,0,5,0"/>
+                    <Button Content="↩ Undo" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding UndoCommand}" Margin="0,0,15,0"/>
+
+                    <Button Content="📤 CSV" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding ExportCsvCommand}" Margin="0,0,5,0"/>
+                    <Button Content="📤 HTML" Style="{StaticResource SecondaryButton}"
+                            Command="{Binding ExportHtmlCommand}" Margin="0,0,15,0"/>
+
+                    <Button Content="📦 Rescue Center" Style="{StaticResource AccentButton}"
+                            Command="{Binding ToggleRescueCenterCommand}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- === ROW 5: Status Bar === -->
+        <Border Grid.Row="5" Background="#E8E8E8" Padding="15,8">
+            <DockPanel>
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center" Foreground="#555"/>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock VerticalAlignment="Center" Foreground="#555">
+                        <Run Text="🔴 "/>
+                        <Run Text="{Binding DuplicateCount, Mode=OneWay}"/>
+                        <Run Text=" duplicit  │  🟡 "/>
+                        <Run Text="{Binding ProbableCount, Mode=OneWay}"/>
+                        <Run Text=" pravděpodobných  │  🟢 "/>
+                        <Run Text="{Binding UniqueCount, Mode=OneWay}"/>
+                        <Run Text=" unikátních  │  💾 Ušetřeno: "/>
+                        <Run Text="{Binding SavedSpace, Mode=OneWay}"/>
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude the tests directory from main project -->
+    <Compile Remove="DuplicateFinder.Tests\**" />
+    <Page Remove="DuplicateFinder.Tests\**" />
+    <None Remove="DuplicateFinder.Tests\**" />
+  </ItemGroup>
+
+</Project>
